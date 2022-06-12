@@ -15,7 +15,7 @@ const (
 	appName        = "gols"
 	appVersion     = "0.10"
 	appUsage       = "[options][file...]"
-	appDiscription = "unix ls command for golang"
+	appDiscription = "unix ls like command for golang"
 )
 
 type exitCode int
@@ -64,7 +64,6 @@ func run(cliantArgs []string) (exitCode, error) {
 	}
 
 	var dir string = opts.Path
-	fmt.Println(dir)
 	if dir == "./" {
 		dir, err = os.Getwd()
 		if err != nil {
