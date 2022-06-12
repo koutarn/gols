@@ -12,7 +12,7 @@ import (
 const (
 	appName        = "gols"
 	appVersion     = "0.01"
-	appUsage       = "[OPTIONS]"
+	appUsage       = "[options][file...]"
 	appDiscription = "unix ls command for golang"
 )
 
