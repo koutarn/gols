@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/fatih/color"
 	"github.com/jessevdk/go-flags"
@@ -27,6 +28,7 @@ const (
 
 type options struct {
 	Version bool   `short:"v" long:"version" description:"Show version"`
+	Recerse bool   `short:"r" long:"recurse" description:"recurse"`
 	Path    string `short:"p" long:"path" default:"./" description:"path"`
 }
 
@@ -71,9 +73,39 @@ func run(cliantArgs []string) (exitCode, error) {
 	}
 
 	// ls実行
-	code, err := ls(dir)
+	// 本当は文字列を吐き出すだけにして後のフィルタリング処理を実行したほうが良いかもしれん
+	if opts.Recerse {
+		code, err := recurseLs(dir)
+		if err != nil {
+			return code, err
+		}
+	} else {
+		code, err := ls(dir)
+		if err != nil {
+			return code, err
+		}
+	}
+
+	//フィルタリング処理
+	//TODO:気が向いたら書く
+
+	return exitCodeOK, nil
+}
+
+//再帰表示
+func recurseLs(dir string) (exitCode, error) {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		printFileInfo(info)
+
+		return nil
+	})
+
 	if err != nil {
-		return code, err
+		return exitCodeErrLs, err
 	}
 
 	return exitCodeOK, nil
@@ -85,11 +117,15 @@ func ls(dir string) (exitCode, error) {
 		return exitCodeErrLs, errors.New("error read dir")
 	}
 
-	for _, fileInfo := range fileInfos {
-		fmt.Printf("%v %s\n",
-			color.New(color.FgHiYellow, color.Bold).Sprintf("%v", fileInfo.Mode()),
-			color.New(color.FgHiWhite, color.Bold).Sprintf("%v", fileInfo.Name()))
+	for _, info := range fileInfos {
+		printFileInfo(info)
 	}
 
 	return exitCodeOK, nil
+}
+
+func printFileInfo(info os.FileInfo) {
+	fmt.Printf("%v %s\n",
+		color.New(color.FgHiYellow, color.Bold).Sprintf("%v", info.Mode()),
+		color.New(color.FgHiWhite, color.Bold).Sprintf("%v", info.Name()))
 }
