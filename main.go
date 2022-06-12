@@ -25,7 +25,8 @@ const (
 )
 
 type options struct {
-	Version bool `short:"v" long:"version" description:"Show version"`
+	Version bool   `short:"v" long:"version" description:"Show version"`
+	Path    string `short:"p" long:"path" default:"./" description:"path"`
 }
 
 func main() {
@@ -55,13 +56,17 @@ func run(cliantArgs []string) (exitCode, error) {
 	}
 
 	if opts.Version {
-		fmt.Printf("%s: v%s\n", appName, appVersion)
+		fmt.Fprintf(os.Stdout, "%s: v%s\n", appName, appVersion)
 		return exitCodeOK, nil
 	}
 
-	dir, err := os.Getwd()
-	if err != nil {
-		return exitCodeErrLs, errors.New("error ls getwd")
+	var dir string = opts.Path
+	fmt.Println(dir)
+	if dir == "./" {
+		dir, err = os.Getwd()
+		if err != nil {
+			return exitCodeErrLs, errors.New("error ls getwd")
+		}
 	}
 
 	// ls実行
@@ -80,7 +85,7 @@ func ls(dir string) (exitCode, error) {
 	}
 
 	for _, fileInfo := range fileInfos {
-		fmt.Println(fileInfo.Name())
+		fmt.Printf("%v %s\n", fileInfo.Mode(), fileInfo.Name())
 	}
 
 	return exitCodeOK, nil
