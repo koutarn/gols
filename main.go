@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -85,7 +86,9 @@ func ls(dir string) (exitCode, error) {
 	}
 
 	for _, fileInfo := range fileInfos {
-		fmt.Printf("%v %s\n", fileInfo.Mode(), fileInfo.Name())
+		fmt.Printf("%v %s\n",
+			color.New(color.FgHiYellow, color.Bold).Sprintf("%v", fileInfo.Mode()),
+			color.New(color.FgHiWhite, color.Bold).Sprintf("%v", fileInfo.Name()))
 	}
 
 	return exitCodeOK, nil
