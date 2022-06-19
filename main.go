@@ -60,7 +60,12 @@ func main() {
 	code, err := run(opts)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] %s\n", err)
+        fmt.Fprintf(
+            color.Error,
+            "[ %v ] %s\n",
+            color.New(color.FgRed,color.Bold).Sprintf("ERROR"),
+            err,
+        )
 	}
 
 	os.Exit(int(code))
