@@ -11,6 +11,8 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
+type exitCode int
+
 const (
 	appName        = "gols"
 	appVersion     = "0.10"
@@ -18,12 +20,10 @@ const (
 	appDiscription = "unix ls like command for golang"
 )
 
-type exitCode int
-
 const (
-	exitCodeOK exitCode = iota
-	exitCodeErrArgs
-	exitCodeErrLs
+    exitCodeOK exitCode = iota
+    exitCodeErrArgs
+    exitCodeErrLs
 )
 
 type options struct {
@@ -32,16 +32,8 @@ type options struct {
 	Path    string `short:"p" long:"path" default:"./" description:"path"`
 }
 
-func main() {
-	code, err := run(os.Args[1:])
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] %s\n", err)
-	}
-
-	os.Exit(int(code))
-}
-
-func run(cliantArgs []string) (exitCode, error) {
+// parseを実行
+func parseArgs(clinentArgs []string) (options,error){
 	var opts options
 	parser := flags.NewParser(&opts, flags.Default)
 	parser.Name = appName
@@ -49,20 +41,39 @@ func run(cliantArgs []string) (exitCode, error) {
 	parser.ShortDescription = appDiscription
 	parser.LongDescription = appDiscription
 
-	_, err := parser.ParseArgs(cliantArgs)
+	_,err := parser.ParseArgs(clinentArgs)
+	return opts,err
+}
+
+func main() {
+
+    //引数をパース
+    opts,err := parseArgs(os.Args[1:])
+    if err != nil {
+	    if flags.WroteHelp(err) {
+	        os.Exit(int(exitCodeOK))
+	    }
+	    os.Exit(int(exitCodeErrArgs))
+    }
+
+    //実行
+	code, err := run(opts)
 
 	if err != nil {
-		if flags.WroteHelp(err) {
-			return exitCodeOK, nil
-		}
-		return exitCodeErrArgs, fmt.Errorf("parse error:%w", err)
+		fmt.Fprintf(os.Stderr, "[ERROR] %s\n", err)
 	}
+
+	os.Exit(int(code))
+}
+
+func run(opts options) (exitCode, error) {
 
 	if opts.Version {
 		fmt.Fprintf(os.Stdout, "%s: v%s\n", appName, appVersion)
 		return exitCodeOK, nil
 	}
 
+    var err error
 	var dir string = opts.Path
 	if dir == "./" {
 		dir, err = os.Getwd()
@@ -72,7 +83,7 @@ func run(cliantArgs []string) (exitCode, error) {
 	}
 
 	// ls実行
-	// 本当は文字列を吐き出すだけにして後のフィルタリング処理を実行したほうが良いかもしれん
+	// TODO:本当は文字列を吐き出すだけにして後のフィルタリング処理を実行したほうが良いかもしれん
 	if opts.Recerse {
 		code, err := recurseLs(dir)
 		if err != nil {
@@ -84,9 +95,6 @@ func run(cliantArgs []string) (exitCode, error) {
 			return code, err
 		}
 	}
-
-	//フィルタリング処理
-	//TODO:気が向いたら書く
 
 	return exitCodeOK, nil
 }
