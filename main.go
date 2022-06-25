@@ -13,6 +13,7 @@ import (
 
 type exitCode int
 
+// アプリ関連情報
 const (
 	appName        = "gols"
 	appVersion     = "0.10"
@@ -20,12 +21,14 @@ const (
 	appDiscription = "unix ls like command for golang"
 )
 
+//終了コード
 const (
-    exitCodeOK exitCode = iota
-    exitCodeErrArgs
-    exitCodeErrLs
+	exitCodeOK exitCode = iota
+	exitCodeErrArgs
+	exitCodeErrLs
 )
 
+// option
 type options struct {
 	Version bool   `short:"v" long:"version" description:"Show version"`
 	Recerse bool   `short:"r" long:"recurse" description:"recurse"`
@@ -33,7 +36,7 @@ type options struct {
 }
 
 // parseを実行
-func parseArgs(clinentArgs []string) (options,error){
+func parseArgs(clinentArgs []string) (options, error) {
 	var opts options
 	parser := flags.NewParser(&opts, flags.Default)
 	parser.Name = appName
@@ -41,31 +44,31 @@ func parseArgs(clinentArgs []string) (options,error){
 	parser.ShortDescription = appDiscription
 	parser.LongDescription = appDiscription
 
-	_,err := parser.ParseArgs(clinentArgs)
-	return opts,err
+	_, err := parser.ParseArgs(clinentArgs)
+	return opts, err
 }
 
 func main() {
 
-    //引数をパース
-    opts,err := parseArgs(os.Args[1:])
-    if err != nil {
-	    if flags.WroteHelp(err) {
-	        os.Exit(int(exitCodeOK))
-	    }
-	    os.Exit(int(exitCodeErrArgs))
-    }
+	//引数をパース
+	opts, err := parseArgs(os.Args[1:])
+	if err != nil {
+		if flags.WroteHelp(err) {
+			os.Exit(int(exitCodeOK))
+		}
+		os.Exit(int(exitCodeErrArgs))
+	}
 
-    //実行
+	//実行
 	code, err := run(opts)
 
 	if err != nil {
-        fmt.Fprintf(
-            color.Error,
-            "[ %v ] %s\n",
-            color.New(color.FgRed,color.Bold).Sprintf("ERROR"),
-            err,
-        )
+		fmt.Fprintf(
+			color.Error,
+			"[ %v ] %s\n",
+			color.New(color.FgRed, color.Bold).Sprintf("ERROR"),
+			err,
+		)
 	}
 
 	os.Exit(int(code))
@@ -78,7 +81,7 @@ func run(opts options) (exitCode, error) {
 		return exitCodeOK, nil
 	}
 
-    var err error
+	var err error
 	var dir string = opts.Path
 	if dir == "./" {
 		dir, err = os.Getwd()
@@ -88,17 +91,15 @@ func run(opts options) (exitCode, error) {
 	}
 
 	// ls実行
-	// TODO:本当は文字列を吐き出すだけにして後のフィルタリング処理を実行したほうが良いかもしれん
+	var code exitCode
 	if opts.Recerse {
-		code, err := recurseLs(dir)
-		if err != nil {
-			return code, err
-		}
+		code, err = recurseLs(dir)
 	} else {
-		code, err := ls(dir)
-		if err != nil {
-			return code, err
-		}
+		code, err = ls(dir)
+	}
+
+	if err != nil {
+		return code, err
 	}
 
 	return exitCodeOK, nil
